@@ -12,7 +12,7 @@ LOGGER = singer.get_logger()
 
 BOOKMARK_KEYS = {'replication_key', 'replication_key_value', 'version'}
 
-def sync_table(mysql_conn, catalog_entry, state, columns, limit=None, query_add=''):
+def sync_table(mysql_conn, catalog_entry, state, columns, limit=None):
     common.whitelist_bookmark_keys(BOOKMARK_KEYS, catalog_entry.tap_stream_id, state)
 
     catalog_metadata = metadata.to_map(catalog_entry.metadata)
@@ -22,6 +22,7 @@ def sync_table(mysql_conn, catalog_entry, state, columns, limit=None, query_add=
     while iterate_limit:
 
         replication_key_metadata = stream_metadata.get('replication-key')
+        query_add_metadata = stream_metadata.get('query-add')
         replication_key_state = singer.get_bookmark(state,
                                                     catalog_entry.tap_stream_id,
                                                     'replication_key')
@@ -61,12 +62,11 @@ def sync_table(mysql_conn, catalog_entry, state, columns, limit=None, query_add=
                     if catalog_entry.schema.properties[replication_key_metadata].format == 'date-time':
                         replication_key_value = pendulum.parse(replication_key_value)
 
-                    select_sql += ' WHERE `{}` >= %(replication_key_value)s %(query_add)s ORDER BY `{}` ASC'.format(
+                    select_sql += ' WHERE `{}` >= %(replication_key_value)s %(query_add_metadata)s ORDER BY `{}` ASC'.format(
                         replication_key_metadata,
                         replication_key_metadata)
 
                     params['replication_key_value'] = replication_key_value
-
                 elif replication_key_metadata is not None:
                     select_sql += ' ORDER BY `{}` ASC'.format(replication_key_metadata)
 
