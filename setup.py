@@ -2,13 +2,13 @@
 
 from setuptools import setup
 
-setup(name='tap-mysql',
+setup(name='tap-mysql-custom',
       version='1.17.5',
       description='Singer.io tap for extracting data from MySQL',
       author='Stitch',
       url='https://singer.io',
       classifiers=['Programming Language :: Python :: 3 :: Only'],
-      py_modules=['tap_mysql'],
+      py_modules=['tap_mysql_custom'],
       install_requires=[
           'attrs==16.3.0',
           'pendulum==1.2.0',
@@ -22,7 +22,7 @@ setup(name='tap-mysql',
       },
       entry_points='''
           [console_scripts]
-          tap-mysql=tap_mysql:main
+          tap-mysql-custom=tap_mysql_custom:main
       ''',
-      packages=['tap_mysql', 'tap_mysql.sync_strategies'],
+      packages=['tap_mysql_custom', 'tap_mysql_custom.sync_strategies'],
 )

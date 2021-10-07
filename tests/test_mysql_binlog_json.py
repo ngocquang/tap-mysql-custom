@@ -38,7 +38,7 @@ expected_rec_1 = {
 
 class MySQLBinlogJson(unittest.TestCase):
     def tap_name(self):
-        return 'tap-mysql'
+        return 'tap-mysql-custom'
 
 
     def name(self):

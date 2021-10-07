@@ -1,19 +1,19 @@
 import unittest
 import pymysql
-import tap_mysql
+import tap_mysql_custom
 import copy
 import singer
 import os
 import singer.metadata
-from tap_mysql.connection import connect_with_backoff
+from tap_mysql_custom.connection import connect_with_backoff
 
 try:
     import tests.utils as test_utils
 except ImportError:
     import utils as test_utils
 
-import tap_mysql.sync_strategies.binlog as binlog
-import tap_mysql.sync_strategies.common as common
+import tap_mysql_custom.sync_strategies.binlog as binlog
+import tap_mysql_custom.sync_strategies.common as common
 
 from pymysqlreplication import BinLogStreamReader
 from pymysqlreplication.event import RotateEvent
@@ -240,7 +240,7 @@ class TestSelectsAppropriateColumns(unittest.TestCase):
                                   'b': Schema(None, inclusion='unsupported'),
                                   'c': Schema(None, inclusion='automatic')})
 
-        got_cols = tap_mysql.desired_columns(selected_cols, table_schema)
+        got_cols = tap_mysql_custom.desired_columns(selected_cols, table_schema)
 
         self.assertEqual(got_cols,
                          set(['a', 'c']),
@@ -263,7 +263,7 @@ class TestSchemaMessages(unittest.TestCase):
         catalog = test_utils.discover_catalog(conn, {})
         catalog.streams[0].stream = 'tab'
         catalog.streams[0].metadata = [
-            {'breadcrumb': (), 'metadata': {'selected': True, 'database-name': 'tap_mysql_test'}},
+            {'breadcrumb': (), 'metadata': {'selected': True, 'database-name': 'tap_mysql_custom_test'}},
             {'breadcrumb': ('properties', 'a'), 'metadata': {'selected': True}}
         ]
 
@@ -271,11 +271,11 @@ class TestSchemaMessages(unittest.TestCase):
 
         global SINGER_MESSAGES
         SINGER_MESSAGES.clear()
-        tap_mysql.do_sync(conn, {}, catalog, {})
+        tap_mysql_custom.do_sync(conn, {}, catalog, {})
 
         schema_message = list(filter(lambda m: isinstance(m, singer.SchemaMessage), SINGER_MESSAGES))[0]
         self.assertTrue(isinstance(schema_message, singer.SchemaMessage))
-        # tap-mysql selects new fields by default. If a field doesn't appear in the schema, then it should be
+        # tap-mysql-custom selects new fields by default. If a field doesn't appear in the schema, then it should be
         # selected
         expectedKeys = ['id', 'a', 'b']
 
@@ -308,7 +308,7 @@ class TestCurrentStream(unittest.TestCase):
             stream.key_properties = []
 
             stream.metadata = [
-                {'breadcrumb': (), 'metadata': {'selected': True, 'database-name': 'tap_mysql_test'}},
+                {'breadcrumb': (), 'metadata': {'selected': True, 'database-name': 'tap_mysql_custom_test'}},
                 {'breadcrumb': ('properties', 'val'), 'metadata': {'selected': True}}
             ]
 
@@ -321,17 +321,17 @@ class TestCurrentStream(unittest.TestCase):
         global SINGER_MESSAGES
         SINGER_MESSAGES.clear()
 
-        tap_mysql.do_sync(self.conn, {}, self.catalog, state)
+        tap_mysql_custom.do_sync(self.conn, {}, self.catalog, state)
         self.assertRegexpMatches(currently_syncing_seq(SINGER_MESSAGES), '^a+b+c+_+')
 
     def test_start_at_currently_syncing(self):
         state = {
-            'currently_syncing': 'tap_mysql_test-b',
+            'currently_syncing': 'tap_mysql_custom_test-b',
             'bookmarks': {
-                'tap_mysql_test-a': {
+                'tap_mysql_custom_test-a': {
                     'version': 123
                 },
-                'tap_mysql_test-b': {
+                'tap_mysql_custom_test-b': {
                     'version': 456
                 }
             }
@@ -339,7 +339,7 @@ class TestCurrentStream(unittest.TestCase):
 
         global SINGER_MESSAGES
         SINGER_MESSAGES.clear()
-        tap_mysql.do_sync(self.conn, {}, self.catalog, state)
+        tap_mysql_custom.do_sync(self.conn, {}, self.catalog, state)
 
         self.assertRegexpMatches(currently_syncing_seq(SINGER_MESSAGES), '^b+c+a+_+')
 
@@ -369,7 +369,7 @@ class TestStreamVersionFullTable(unittest.TestCase):
             stream.key_properties = []
 
             stream.metadata = [
-                {'breadcrumb': (), 'metadata': {'selected': True, 'database-name': 'tap_mysql_test'}},
+                {'breadcrumb': (), 'metadata': {'selected': True, 'database-name': 'tap_mysql_custom_test'}},
                 {'breadcrumb': ('properties', 'val'), 'metadata': {'selected': True}}
             ]
 
@@ -381,7 +381,7 @@ class TestStreamVersionFullTable(unittest.TestCase):
 
         global SINGER_MESSAGES
         SINGER_MESSAGES.clear()
-        tap_mysql.do_sync(self.conn, {}, self.catalog, state)
+        tap_mysql_custom.do_sync(self.conn, {}, self.catalog, state)
 
         (message_types, versions) = message_types_and_versions(SINGER_MESSAGES)
 
@@ -394,7 +394,7 @@ class TestStreamVersionFullTable(unittest.TestCase):
 
         state = {
             'bookmarks': {
-                'tap_mysql_test-full_table': {
+                'tap_mysql_custom_test-full_table': {
                     'version': None
                 }
             }
@@ -402,7 +402,7 @@ class TestStreamVersionFullTable(unittest.TestCase):
 
         global SINGER_MESSAGES
         SINGER_MESSAGES.clear()
-        tap_mysql.do_sync(self.conn, {}, self.catalog, state)
+        tap_mysql_custom.do_sync(self.conn, {}, self.catalog, state)
 
         (message_types, versions) = message_types_and_versions(SINGER_MESSAGES)
 
@@ -410,15 +410,15 @@ class TestStreamVersionFullTable(unittest.TestCase):
         self.assertEqual(['RecordMessage', 'ActivateVersionMessage'], message_types)
         self.assertEqual(versions, [12345, 12345])
 
-        self.assertFalse('version' in state['bookmarks']['tap_mysql_test-full_table'].keys())
-        self.assertTrue(state['bookmarks']['tap_mysql_test-full_table']['initial_full_table_complete'])
+        self.assertFalse('version' in state['bookmarks']['tap_mysql_custom_test-full_table'].keys())
+        self.assertTrue(state['bookmarks']['tap_mysql_custom_test-full_table']['initial_full_table_complete'])
 
     def test_with_initial_full_table_complete_in_state(self):
         common.get_stream_version = lambda a, b: 12345
 
         state = {
             'bookmarks': {
-                'tap_mysql_test-full_table': {
+                'tap_mysql_custom_test-full_table': {
                     'initial_full_table_complete': True
                 }
             }
@@ -426,7 +426,7 @@ class TestStreamVersionFullTable(unittest.TestCase):
 
         global SINGER_MESSAGES
         SINGER_MESSAGES.clear()
-        tap_mysql.do_sync(self.conn, {}, self.catalog, state)
+        tap_mysql_custom.do_sync(self.conn, {}, self.catalog, state)
 
         (message_types, versions) = message_types_and_versions(SINGER_MESSAGES)
 
@@ -438,7 +438,7 @@ class TestStreamVersionFullTable(unittest.TestCase):
 
         state = {
             'bookmarks': {
-                'tap_mysql_test-full_table': {
+                'tap_mysql_custom_test-full_table': {
                     'version': 1,
                     'initial_full_table_complete': True
                 }
@@ -447,15 +447,15 @@ class TestStreamVersionFullTable(unittest.TestCase):
 
         global SINGER_MESSAGES
         SINGER_MESSAGES.clear()
-        tap_mysql.do_sync(self.conn, {}, self.catalog, state)
+        tap_mysql_custom.do_sync(self.conn, {}, self.catalog, state)
 
         (message_types, versions) = message_types_and_versions(SINGER_MESSAGES)
 
         self.assertEqual(['RecordMessage', 'ActivateVersionMessage'], message_types)
         self.assertEqual(versions, [12345, 12345])
 
-        self.assertFalse('version' in state['bookmarks']['tap_mysql_test-full_table'].keys())
-        self.assertTrue(state['bookmarks']['tap_mysql_test-full_table']['initial_full_table_complete'])
+        self.assertFalse('version' in state['bookmarks']['tap_mysql_custom_test-full_table'].keys())
+        self.assertTrue(state['bookmarks']['tap_mysql_custom_test-full_table']['initial_full_table_complete'])
 
 
 class TestIncrementalReplication(unittest.TestCase):
@@ -482,7 +482,7 @@ class TestIncrementalReplication(unittest.TestCase):
                  'metadata': {
                     'selected': True,
                      'table-key-properties': [],
-                    'database-name': 'tap_mysql_test'
+                    'database-name': 'tap_mysql_custom_test'
                 }},
                 {'breadcrumb': ('properties', 'val'), 'metadata': {'selected': True}}
             ]
@@ -496,7 +496,7 @@ class TestIncrementalReplication(unittest.TestCase):
         global SINGER_MESSAGES
         SINGER_MESSAGES.clear()
 
-        tap_mysql.do_sync(self.conn, {}, self.catalog, state)
+        tap_mysql_custom.do_sync(self.conn, {}, self.catalog, state)
 
         (message_types, versions) = message_types_and_versions(SINGER_MESSAGES)
 
@@ -517,12 +517,12 @@ class TestIncrementalReplication(unittest.TestCase):
     def test_with_state(self):
         state = {
             'bookmarks': {
-                'tap_mysql_test-incremental': {
+                'tap_mysql_custom_test-incremental': {
                     'version': 1,
                     'replication_key_value': '2017-06-20',
                     'replication_key': 'updated'
                 },
-                'tap_mysql_test-integer_incremental': {
+                'tap_mysql_custom_test-integer_incremental': {
                     'version': 1,
                     'replication_key_value': 3,
                     'replication_key': 'updated'
@@ -532,7 +532,7 @@ class TestIncrementalReplication(unittest.TestCase):
 
         global SINGER_MESSAGES
         SINGER_MESSAGES.clear()
-        tap_mysql.do_sync(self.conn, {}, self.catalog, state)
+        tap_mysql_custom.do_sync(self.conn, {}, self.catalog, state)
 
         (message_types, versions) = message_types_and_versions(SINGER_MESSAGES)
 
@@ -550,7 +550,7 @@ class TestIncrementalReplication(unittest.TestCase):
     def test_change_replication_key(self):
         state = {
             'bookmarks': {
-                'tap_mysql_test-incremental': {
+                'tap_mysql_custom_test-incremental': {
                     'version': 1,
                     'replication_key_value': '2017-06-20',
                     'replication_key': 'updated'
@@ -561,23 +561,23 @@ class TestIncrementalReplication(unittest.TestCase):
         stream = [x for x in self.catalog.streams if x.stream == 'incremental'][0]
 
         stream.metadata = [
-            {'breadcrumb': (), 'metadata': {'selected': True, 'database-name': 'tap_mysql_test'}},
+            {'breadcrumb': (), 'metadata': {'selected': True, 'database-name': 'tap_mysql_custom_test'}},
             {'breadcrumb': ('properties', 'val'), 'metadata': {'selected': True}},
             {'breadcrumb': ('properties', 'updated'), 'metadata': {'selected': True}}
         ]
 
         test_utils.set_replication_method_and_key(stream, 'INCREMENTAL', 'val')
 
-        tap_mysql.do_sync(self.conn, {}, self.catalog, state)
+        tap_mysql_custom.do_sync(self.conn, {}, self.catalog, state)
 
-        self.assertEqual(state['bookmarks']['tap_mysql_test-incremental']['replication_key'], 'val')
-        self.assertEqual(state['bookmarks']['tap_mysql_test-incremental']['replication_key_value'], 3)
-        self.assertEqual(state['bookmarks']['tap_mysql_test-incremental']['version'], 1)
+        self.assertEqual(state['bookmarks']['tap_mysql_custom_test-incremental']['replication_key'], 'val')
+        self.assertEqual(state['bookmarks']['tap_mysql_custom_test-incremental']['replication_key_value'], 3)
+        self.assertEqual(state['bookmarks']['tap_mysql_custom_test-incremental']['version'], 1)
 
     def test_version_not_cleared_from_state_after_incremental_success(self):
         state = {
             'bookmarks': {
-                'tap_mysql_test-incremental': {
+                'tap_mysql_custom_test-incremental': {
                     'version': 1,
                     'replication_key_value': '2017-06-20',
                     'replication_key': 'updated'
@@ -585,9 +585,9 @@ class TestIncrementalReplication(unittest.TestCase):
             }
         }
 
-        tap_mysql.do_sync(self.conn, {}, self.catalog, state)
+        tap_mysql_custom.do_sync(self.conn, {}, self.catalog, state)
 
-        self.assertEqual(state['bookmarks']['tap_mysql_test-incremental']['version'], 1)
+        self.assertEqual(state['bookmarks']['tap_mysql_custom_test-incremental']['version'], 1)
 
 class TestBinlogReplication(unittest.TestCase):
 
@@ -624,7 +624,7 @@ class TestBinlogReplication(unittest.TestCase):
                 {'breadcrumb': (),
                  'metadata': {
                      'selected': True,
-                     'database-name': 'tap_mysql_test',
+                     'database-name': 'tap_mysql_custom_test',
                      'table-key-propertes': ['id']
                  }},
                 {'breadcrumb': ('properties', 'id'), 'metadata': {'selected': True}},
@@ -654,7 +654,7 @@ class TestBinlogReplication(unittest.TestCase):
 
         global SINGER_MESSAGES
         SINGER_MESSAGES.clear()
-        tap_mysql.do_sync(self.conn, {}, self.catalog, state)
+        tap_mysql_custom.do_sync(self.conn, {}, self.catalog, state)
 
         message_types = [type(m) for m in SINGER_MESSAGES]
 
@@ -685,16 +685,16 @@ class TestBinlogReplication(unittest.TestCase):
 
         record_messages = list(filter(lambda m: isinstance(m, singer.RecordMessage), SINGER_MESSAGES))
 
-        self.assertIsNotNone(singer.get_bookmark(self.state, 'tap_mysql_test-binlog_1', 'log_file'))
-        self.assertIsNotNone(singer.get_bookmark(self.state, 'tap_mysql_test-binlog_1', 'log_pos'))
+        self.assertIsNotNone(singer.get_bookmark(self.state, 'tap_mysql_custom_test-binlog_1', 'log_file'))
+        self.assertIsNotNone(singer.get_bookmark(self.state, 'tap_mysql_custom_test-binlog_1', 'log_pos'))
 
-        self.assertIsNotNone(singer.get_bookmark(self.state, 'tap_mysql_test-binlog_2', 'log_file'))
-        self.assertIsNotNone(singer.get_bookmark(self.state, 'tap_mysql_test-binlog_2', 'log_pos'))
+        self.assertIsNotNone(singer.get_bookmark(self.state, 'tap_mysql_custom_test-binlog_2', 'log_file'))
+        self.assertIsNotNone(singer.get_bookmark(self.state, 'tap_mysql_custom_test-binlog_2', 'log_pos'))
 
-        self.assertEqual(singer.get_bookmark(state, 'tap_mysql_test-binlog_1', 'version'),
+        self.assertEqual(singer.get_bookmark(state, 'tap_mysql_custom_test-binlog_1', 'version'),
                          activate_version_message_1.version)
 
-        self.assertEqual(singer.get_bookmark(state, 'tap_mysql_test-binlog_2', 'version'),
+        self.assertEqual(singer.get_bookmark(state, 'tap_mysql_custom_test-binlog_2', 'version'),
                          activate_version_message_2.version)
 
     def test_fail_on_view(self):
@@ -709,7 +709,7 @@ class TestBinlogReplication(unittest.TestCase):
         expected_exception_message = "Unable to replicate stream({}) with binlog because it is a view.".format(self.catalog.streams[0].stream)
 
         try:
-            tap_mysql.do_sync(self.conn, {}, self.catalog, state)
+            tap_mysql_custom.do_sync(self.conn, {}, self.catalog, state)
         except Exception as e:
             failed = True
             exception_message = str(e)
@@ -740,7 +740,7 @@ class TestBinlogReplication(unittest.TestCase):
             )
 
         try:
-            tap_mysql.do_sync(self.conn, {}, self.catalog, state)
+            tap_mysql_custom.do_sync(self.conn, {}, self.catalog, state)
         except Exception as e:
             failed = True
             exception_message = str(e)
@@ -754,7 +754,7 @@ class TestBinlogReplication(unittest.TestCase):
         config = test_utils.get_db_config()
         config['server_id'] = "100"
 
-        tap_mysql.do_sync(self.conn, config, self.catalog, self.state)
+        tap_mysql_custom.do_sync(self.conn, config, self.catalog, self.state)
         record_messages = list(filter(lambda m: isinstance(m, singer.RecordMessage), SINGER_MESSAGES))
 
         message_types = [type(m) for m in SINGER_MESSAGES]
@@ -790,11 +790,11 @@ class TestBinlogReplication(unittest.TestCase):
                            m.record.get(binlog.SDC_DELETED_AT) is not None)
                           for m in record_messages])
 
-        self.assertIsNotNone(singer.get_bookmark(self.state, 'tap_mysql_test-binlog_1', 'log_file'))
-        self.assertIsNotNone(singer.get_bookmark(self.state, 'tap_mysql_test-binlog_1', 'log_pos'))
+        self.assertIsNotNone(singer.get_bookmark(self.state, 'tap_mysql_custom_test-binlog_1', 'log_file'))
+        self.assertIsNotNone(singer.get_bookmark(self.state, 'tap_mysql_custom_test-binlog_1', 'log_pos'))
 
-        self.assertIsNotNone(singer.get_bookmark(self.state, 'tap_mysql_test-binlog_2', 'log_file'))
-        self.assertIsNotNone(singer.get_bookmark(self.state, 'tap_mysql_test-binlog_2', 'log_pos'))
+        self.assertIsNotNone(singer.get_bookmark(self.state, 'tap_mysql_custom_test-binlog_2', 'log_file'))
+        self.assertIsNotNone(singer.get_bookmark(self.state, 'tap_mysql_custom_test-binlog_2', 'log_pos'))
 
 
 class TestViews(unittest.TestCase):
@@ -859,7 +859,7 @@ class TestEscaping(unittest.TestCase):
              'metadata': {
                  'selected': True,
                  'table-key-properties': [],
-                 'database-name': 'tap_mysql_test'
+                 'database-name': 'tap_mysql_custom_test'
              }},
             {'breadcrumb': ('properties', 'b c'), 'metadata': {'selected': True}}
         ]
@@ -869,7 +869,7 @@ class TestEscaping(unittest.TestCase):
     def runTest(self):
         global SINGER_MESSAGES
         SINGER_MESSAGES.clear()
-        tap_mysql.do_sync(self.conn, {}, self.catalog, {})
+        tap_mysql_custom.do_sync(self.conn, {}, self.catalog, {})
 
         record_message = list(filter(lambda m: isinstance(m, singer.RecordMessage), SINGER_MESSAGES))[0]
 
@@ -891,7 +891,7 @@ class TestJsonTables(unittest.TestCase):
             stream.key_properties = []
 
             stream.metadata = [
-                {'breadcrumb': (), 'metadata': {'selected': True, 'database-name': 'tap_mysql_test'}},
+                {'breadcrumb': (), 'metadata': {'selected': True, 'database-name': 'tap_mysql_custom_test'}},
                 {'breadcrumb': ('properties', 'val'), 'metadata': {'selected': True}}
             ]
 
@@ -901,7 +901,7 @@ class TestJsonTables(unittest.TestCase):
     def runTest(self):
         global SINGER_MESSAGES
         SINGER_MESSAGES.clear()
-        tap_mysql.do_sync(self.conn, {}, self.catalog, {})
+        tap_mysql_custom.do_sync(self.conn, {}, self.catalog, {})
 
         record_message = list(filter(lambda m: isinstance(m, singer.RecordMessage), SINGER_MESSAGES))[0]
         self.assertTrue(isinstance(record_message, singer.RecordMessage))

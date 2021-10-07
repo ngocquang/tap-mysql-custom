@@ -281,7 +281,7 @@ expected_rec_3 = {
 
 class MySQLBinlog(unittest.TestCase):
     def tap_name(self):
-        return 'tap-mysql'
+        return 'tap-mysql-custom'
 
 
     def name(self):

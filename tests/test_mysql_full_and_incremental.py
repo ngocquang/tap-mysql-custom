@@ -309,7 +309,7 @@ class MySQLFullAndIncremental(unittest.TestCase):
         return "tap_tester_mysql_full_and_incremental"
 
     def tap_name(self):
-        return "tap-mysql"
+        return "tap-mysql-custom"
 
     def get_type(self):
         return "platform.mysql"

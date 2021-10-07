@@ -4,9 +4,9 @@ import pymysql
 import unittest
 import singer
 import singer.metadata
-import tap_mysql
+import tap_mysql_custom
 
-from tap_mysql.connection import connect_with_backoff
+from tap_mysql_custom.connection import connect_with_backoff
 
 try:
     import tests.utils as test_utils
@@ -141,7 +141,7 @@ class BinlogInterruption(unittest.TestCase):
             stream.metadata = [
                 {'breadcrumb': (),
                  'metadata': {'selected': True,
-                              'database-name': 'tap_mysql_test',
+                              'database-name': 'tap_mysql_custom_test',
                               'table-key-properties': ['id']}},
                 {'breadcrumb': ('properties', 'id'), 'metadata': {'selected': True}},
                 {'breadcrumb': ('properties', 'foo'), 'metadata': {'selected': True}},
@@ -181,7 +181,7 @@ class BinlogInterruption(unittest.TestCase):
             stream.metadata = singer.metadata.to_list(md_map)
 
         try:
-            tap_mysql.do_sync(self.conn, test_utils.get_db_config(), self.catalog, state)
+            tap_mysql_custom.do_sync(self.conn, test_utils.get_db_config(), self.catalog, state)
         except Exception as ex:
             if str(ex) == 'simulated exception':
                 failed_syncing_table_2 = True
@@ -197,10 +197,10 @@ class BinlogInterruption(unittest.TestCase):
                           ['table_1', {'id': 3, 'bar': 'ghi', 'foo': 300}],
                           ['table_2', {'id': 1, 'bar': 'ghi', 'foo': 300}]])
 
-        self.assertEqual(state['currently_syncing'], 'tap_mysql_test-table_2')
+        self.assertEqual(state['currently_syncing'], 'tap_mysql_custom_test-table_2')
 
-        table_1_bookmark = state['bookmarks']['tap_mysql_test-table_1']
-        table_2_bookmark = state['bookmarks']['tap_mysql_test-table_2']
+        table_1_bookmark = state['bookmarks']['tap_mysql_custom_test-table_1']
+        table_2_bookmark = state['bookmarks']['tap_mysql_custom_test-table_2']
 
         self.assertEqual(table_1_bookmark,
                          {'initial_full_table_complete': True})
@@ -222,7 +222,7 @@ class BinlogInterruption(unittest.TestCase):
         table_2_RECORD_COUNT = 0
         SINGER_MESSAGES.clear()
 
-        tap_mysql.do_sync(self.conn, test_utils.get_db_config(), self.catalog, state)
+        tap_mysql_custom.do_sync(self.conn, test_utils.get_db_config(), self.catalog, state)
 
         self.assertFalse(failed_syncing_table_2)
 
@@ -238,8 +238,8 @@ class BinlogInterruption(unittest.TestCase):
 
         self.assertIsNone(state['currently_syncing'])
 
-        table_1_bookmark = state['bookmarks']['tap_mysql_test-table_1']
-        table_2_bookmark = state['bookmarks']['tap_mysql_test-table_2']
+        table_1_bookmark = state['bookmarks']['tap_mysql_custom_test-table_1']
+        table_2_bookmark = state['bookmarks']['tap_mysql_custom_test-table_2']
 
         self.assertEqual(table_1_bookmark,
                          {'initial_full_table_complete': True})
@@ -265,7 +265,7 @@ class BinlogInterruption(unittest.TestCase):
         TABLE_2_RECORD_COUNT = 0
         SINGER_MESSAGES.clear()
 
-        tap_mysql.do_sync(self.conn, test_utils.get_db_config(), self.catalog, state)
+        tap_mysql_custom.do_sync(self.conn, test_utils.get_db_config(), self.catalog, state)
 
         self.assertFalse(failed_syncing_table_2)
 
@@ -281,8 +281,8 @@ class BinlogInterruption(unittest.TestCase):
 
         self.assertIsNone(state['currently_syncing'])
 
-        table_1_bookmark = state['bookmarks']['tap_mysql_test-table_1']
-        table_2_bookmark = state['bookmarks']['tap_mysql_test-table_2']
+        table_1_bookmark = state['bookmarks']['tap_mysql_custom_test-table_1']
+        table_2_bookmark = state['bookmarks']['tap_mysql_custom_test-table_2']
 
         self.assertEqual(table_1_bookmark,
                          {'initial_full_table_complete': True})
@@ -310,7 +310,7 @@ class BinlogInterruption(unittest.TestCase):
         config = test_utils.get_db_config()
 
         try:
-            tap_mysql.do_sync(self.conn, config, self.catalog, state)
+            tap_mysql_custom.do_sync(self.conn, config, self.catalog, state)
         except Exception as ex:
             if str(ex) == 'simulated exception':
                 failed_syncing_table_3 = True
@@ -328,10 +328,10 @@ class BinlogInterruption(unittest.TestCase):
                           ['table_1', {'id': 3,            'bar': 'ghi', 'foo': 300}],
                           ['table_3', {'id': "chicken-11", 'bar': 'ghi', 'foo': 300}]])
 
-        self.assertEqual(state['currently_syncing'], 'tap_mysql_test-table_3')
+        self.assertEqual(state['currently_syncing'], 'tap_mysql_custom_test-table_3')
 
-        table_1_bookmark = state['bookmarks']['tap_mysql_test-table_1']
-        table_3_bookmark = state['bookmarks']['tap_mysql_test-table_3']
+        table_1_bookmark = state['bookmarks']['tap_mysql_custom_test-table_1']
+        table_3_bookmark = state['bookmarks']['tap_mysql_custom_test-table_3']
 
         self.assertEqual(table_1_bookmark,
                          {'initial_full_table_complete': True})
@@ -353,7 +353,7 @@ class BinlogInterruption(unittest.TestCase):
         table_3_RECORD_COUNT = 0
         SINGER_MESSAGES.clear()
 
-        tap_mysql.do_sync(self.conn, config, self.catalog, state)
+        tap_mysql_custom.do_sync(self.conn, config, self.catalog, state)
 
         self.assertFalse(failed_syncing_table_3)
 
@@ -369,8 +369,8 @@ class BinlogInterruption(unittest.TestCase):
 
         self.assertIsNone(state['currently_syncing'])
 
-        table_1_bookmark = state['bookmarks']['tap_mysql_test-table_1']
-        table_3_bookmark = state['bookmarks']['tap_mysql_test-table_3']
+        table_1_bookmark = state['bookmarks']['tap_mysql_custom_test-table_1']
+        table_3_bookmark = state['bookmarks']['tap_mysql_custom_test-table_3']
 
         self.assertEqual(table_1_bookmark,
                          {'initial_full_table_complete': True})
@@ -396,7 +396,7 @@ class BinlogInterruption(unittest.TestCase):
         TABLE_3_RECORD_COUNT = 0
         SINGER_MESSAGES.clear()
 
-        tap_mysql.do_sync(self.conn, config, self.catalog, state)
+        tap_mysql_custom.do_sync(self.conn, config, self.catalog, state)
 
         self.assertFalse(failed_syncing_table_3)
 
@@ -413,8 +413,8 @@ class BinlogInterruption(unittest.TestCase):
 
         self.assertIsNone(state['currently_syncing'])
 
-        table_1_bookmark = state['bookmarks']['tap_mysql_test-table_1']
-        table_3_bookmark = state['bookmarks']['tap_mysql_test-table_3']
+        table_1_bookmark = state['bookmarks']['tap_mysql_custom_test-table_1']
+        table_3_bookmark = state['bookmarks']['tap_mysql_custom_test-table_3']
 
         self.assertEqual(table_1_bookmark,
                          {'initial_full_table_complete': True})
@@ -432,7 +432,7 @@ class FullTableInterruption(unittest.TestCase):
             stream.metadata = [
                 {'breadcrumb': (),
                  'metadata': {'selected': True,
-                              'database-name': 'tap_mysql_test',
+                              'database-name': 'tap_mysql_custom_test',
                               'table-key-properties': ['id']}},
                 {'breadcrumb': ('properties', 'id'), 'metadata': {'selected': True}},
                 {'breadcrumb': ('properties', 'foo'), 'metadata': {'selected': True}},
@@ -466,7 +466,7 @@ class FullTableInterruption(unittest.TestCase):
 
 
         try:
-            tap_mysql.do_sync(self.conn, {}, self.catalog, state)
+            tap_mysql_custom.do_sync(self.conn, {}, self.catalog, state)
         except Exception as ex:
             if str(ex) == 'simulated exception':
                 failed_syncing_table_2 = True
@@ -484,13 +484,13 @@ class FullTableInterruption(unittest.TestCase):
                          ])
 
         expected_state_1 = {
-            'currently_syncing': 'tap_mysql_test-table_2',
+            'currently_syncing': 'tap_mysql_custom_test-table_2',
             'bookmarks': {
-                'tap_mysql_test-table_2': {
+                'tap_mysql_custom_test-table_2': {
                     'last_pk_fetched': {'id': 1},
                     'max_pk_values': {'id': 3}
                 },
-                'tap_mysql_test-table_1': {
+                'tap_mysql_custom_test-table_1': {
                     'initial_full_table_complete': True
                 }
             }
@@ -502,7 +502,7 @@ class FullTableInterruption(unittest.TestCase):
         TABLE_2_RECORD_COUNT = 0
         SINGER_MESSAGES.clear()
 
-        tap_mysql.do_sync(self.conn, {}, self.catalog, state)
+        tap_mysql_custom.do_sync(self.conn, {}, self.catalog, state)
 
         self.assertFalse(failed_syncing_table_2)
 
@@ -517,13 +517,13 @@ class FullTableInterruption(unittest.TestCase):
         expected_state_2 = {
             'currently_syncing': None,
             'bookmarks': {
-                'tap_mysql_test-table_1': {
+                'tap_mysql_custom_test-table_1': {
                     'initial_full_table_complete': True
                 },
-                'tap_mysql_test-table_2': {
+                'tap_mysql_custom_test-table_2': {
                     'initial_full_table_complete': True
                 },
-                'tap_mysql_test-table_4': {
+                'tap_mysql_custom_test-table_4': {
                     'initial_full_table_complete': True
                 }
             }

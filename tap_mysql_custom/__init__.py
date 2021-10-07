@@ -21,12 +21,12 @@ from singer import utils
 from singer.schema import Schema
 from singer.catalog import Catalog, CatalogEntry
 
-import tap_mysql.sync_strategies.binlog as binlog
-import tap_mysql.sync_strategies.common as common
-import tap_mysql.sync_strategies.full_table as full_table
-import tap_mysql.sync_strategies.incremental as incremental
+import tap_mysql_custom.sync_strategies.binlog as binlog
+import tap_mysql_custom.sync_strategies.common as common
+import tap_mysql_custom.sync_strategies.full_table as full_table
+import tap_mysql_custom.sync_strategies.incremental as incremental
 
-from tap_mysql.connection import connect_with_backoff, MySQLConnection
+from tap_mysql_custom.connection import connect_with_backoff, MySQLConnection
 
 
 Column = collections.namedtuple('Column', [

@@ -1,19 +1,19 @@
 import unittest
 import pymysql
-import tap_mysql
+import tap_mysql_custom
 import copy
 import singer
 import os
 import singer.metadata
-from tap_mysql.connection import connect_with_backoff
+from tap_mysql_custom.connection import connect_with_backoff
 
 try:
     import tests.utils as test_utils
 except ImportError:
     import utils as test_utils
 
-import tap_mysql.sync_strategies.binlog as binlog
-import tap_mysql.sync_strategies.common as common
+import tap_mysql_custom.sync_strategies.binlog as binlog
+import tap_mysql_custom.sync_strategies.common as common
 
 from pymysqlreplication import BinLogStreamReader
 from pymysqlreplication.event import RotateEvent
@@ -58,7 +58,7 @@ class TestDateTypes(unittest.TestCase):
                 {'breadcrumb': (),
                  'metadata': {
                      'selected': True,
-                     'database-name': 'tap_mysql_test',
+                     'database-name': 'tap_mysql_custom_test',
                      'table-key-propertes': ['id']
                  }},
                 {'breadcrumb': ('properties', 'id'), 'metadata': {'selected': True}},
@@ -91,7 +91,7 @@ class TestDateTypes(unittest.TestCase):
 
         global SINGER_MESSAGES
         SINGER_MESSAGES.clear()
-        tap_mysql.do_sync(self.conn, {}, self.catalog, state)
+        tap_mysql_custom.do_sync(self.conn, {}, self.catalog, state)
 
         message_types = [type(m) for m in SINGER_MESSAGES]
 

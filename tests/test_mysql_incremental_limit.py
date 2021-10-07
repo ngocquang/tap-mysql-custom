@@ -102,7 +102,7 @@ class MySQLIncrementalLimit(unittest.TestCase):
         return "tap_tester_mysql_incremental_limit"
 
     def tap_name(self):
-        return "tap-mysql"
+        return "tap-mysql-custom"
 
     def get_type(self):
         return "platform.mysql"

@@ -1,15 +1,15 @@
-# tap-mysql
+# tap-mysql-custom
 
-[![PyPI version](https://badge.fury.io/py/tap-mysql.svg)](https://badge.fury.io/py/tap-mysql)
-[![CircleCI Build Status](https://circleci.com/gh/singer-io/tap-mysql.png)](https://circleci.com/gh/singer-io/tap-mysql)
+[![PyPI version](https://badge.fury.io/py/tap-mysql-custom.svg)](https://badge.fury.io/py/tap-mysql-custom)
+[![CircleCI Build Status](https://circleci.com/gh/singer-io/tap-mysql-custom.png)](https://circleci.com/gh/singer-io/tap-mysql-custom)
 
 [Singer](https://www.singer.io/) tap that extracts data from a [MySQL](https://www.mysql.com/) database and produces JSON-formatted data following the [Singer spec](https://github.com/singer-io/getting-started/blob/master/docs/SPEC.md).
 
 ```bash
-$ mkvirtualenv -p python3 tap-mysql
-$ pip install tap-mysql
-$ tap-mysql --config config.json --discover
-$ tap-mysql --config config.json --properties properties.json --state state.json
+$ mkvirtualenv -p python3 tap-mysql-custom
+$ pip install tap-mysql-custom
+$ tap-mysql-custom --config config.json --discover
+$ tap-mysql-custom --config config.json --properties properties.json --state state.json
 ```
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
@@ -31,23 +31,23 @@ $ tap-mysql --config config.json --properties properties.json --state state.json
 
 ## Usage
 
-This section dives into basic usage of `tap-mysql` by walking through extracting
+This section dives into basic usage of `tap-mysql-custom` by walking through extracting
 data from a table. It assumes that you can connect to and read from a MySQL
 database.
 
 ### Install
 
 ```bash
-$ mkvirtualenv -p python3 tap-mysql
-$ pip install tap-mysql
+$ mkvirtualenv -p python3 tap-mysql-custom
+$ pip install tap-mysql-custom
 ```
 
 or
 
 ```bash
-$ git clone git@github.com:singer-io/tap-mysql.git
-$ cd tap-mysql
-$ mkvirtualenv -p python3 tap-mysql
+$ git clone git@github.com:singer-io/tap-mysql-custom.git
+$ cd tap-mysql-custom
+$ mkvirtualenv -p python3 tap-mysql-custom
 $ python install .
 ```
 
@@ -90,7 +90,7 @@ The tap can be invoked in discovery mode to find the available tables and
 columns in the database:
 
 ```bash
-$ tap-mysql --config config.json --discover
+$ tap-mysql-custom --config config.json --discover
 
 ```
 
@@ -185,14 +185,14 @@ source table directly corresponds to a Singer stream.
 
 ### Field selection
 
-In sync mode, `tap-mysql` consumes the catalog and looks for tables and fields
+In sync mode, `tap-mysql-custom` consumes the catalog and looks for tables and fields
 have been marked as _selected_ in their associated metadata entries.
 
 Redirect output from the tap's discovery mode to a file so that it can be
 modified:
 
 ```bash
-$ tap-mysql -c config.json --discover > properties.json
+$ tap-mysql-custom -c config.json --discover > properties.json
 ```
 
 Then edit `properties.json` to make selections. In this example we want the
@@ -258,7 +258,7 @@ information, see [Replication methods and state file](#replication-methods-and-s
 With a properties catalog that describes field and table selections, the tap can be invoked in sync mode:
 
 ```bash
-$ tap-mysql -c config.json --properties properties.json
+$ tap-mysql-custom -c config.json --properties properties.json
 ```
 
 Messages are written to standard output following the Singer specification. The
@@ -286,7 +286,7 @@ resultant stream of JSON data can be consumed by a Singer target.
 
 ## Replication methods and state file
 
-In the above example, we invoked `tap-mysql` without providing a _state_ file
+In the above example, we invoked `tap-mysql-custom` without providing a _state_ file
 and without specifying a replication method. The two ways to replicate a given
 table are `FULL_TABLE` and `INCREMENTAL`.
 
@@ -341,7 +341,7 @@ We have no meaningful state so far, so just invoke the tap in sync mode again
 without a state file:
 
 ```bash
-$ tap-mysql -c config.json --properties properties.json
+$ tap-mysql-custom -c config.json --properties properties.json
 ```
 
 The output messages look very similar to when the table was replicated using the
@@ -395,7 +395,7 @@ mysql> insert into animals (name, likes_getting_petted) values ('dog', true), ('
 ```
 
 ```bash
-$ tap-mysql -c config.json --properties properties.json --state state.json
+$ tap-mysql-custom -c config.json --properties properties.json --state state.json
 ```
 
 This invocation extracts any data since (and including) the

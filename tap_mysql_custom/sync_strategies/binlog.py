@@ -16,9 +16,9 @@ from singer.schema import Schema
 import pymysql.connections
 import pymysql.err
 import re
-import tap_mysql.sync_strategies.common as common
+import tap_mysql_custom.sync_strategies.common as common
 
-from tap_mysql.connection import connect_with_backoff, MySQLConnection, make_connection_wrapper
+from tap_mysql_custom.connection import connect_with_backoff, MySQLConnection, make_connection_wrapper
 from pymysqlreplication.constants import FIELD_TYPE
 from pymysqlreplication import BinLogStreamReader
 from pymysqlreplication.event import RotateEvent

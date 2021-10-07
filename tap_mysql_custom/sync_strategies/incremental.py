@@ -5,8 +5,8 @@ import pendulum
 import singer
 from singer import metadata
 
-from tap_mysql.connection import connect_with_backoff, MySQLConnection
-import tap_mysql.sync_strategies.common as common
+from tap_mysql_custom.connection import connect_with_backoff, MySQLConnection
+import tap_mysql_custom.sync_strategies.common as common
 
 LOGGER = singer.get_logger()
 

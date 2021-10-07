@@ -1,11 +1,11 @@
 import os
 import pymysql
 import singer
-import tap_mysql
-import tap_mysql.sync_strategies.common as common
-from tap_mysql.connection import MySQLConnection
+import tap_mysql_custom
+import tap_mysql_custom.sync_strategies.common as common
+from tap_mysql_custom.connection import MySQLConnection
 
-DB_NAME='tap_mysql_test'
+DB_NAME='tap_mysql_custom_test'
 
 def get_db_config():
     config = {}
@@ -45,7 +45,7 @@ def get_test_connection():
 
 
 def discover_catalog(connection, catalog):
-    catalog = tap_mysql.discover_catalog(connection, catalog)
+    catalog = tap_mysql_custom.discover_catalog(connection, catalog)
     streams = []
 
     for stream in catalog.streams:

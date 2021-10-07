@@ -3,7 +3,7 @@ import singer
 from singer import Schema
 from singer.catalog import CatalogEntry
 
-from tap_mysql.sync_strategies.full_table import generate_pk_bookmark_clause, generate_pk_clause
+from tap_mysql_custom.sync_strategies.full_table import generate_pk_bookmark_clause, generate_pk_clause
 
 
 class TestFullTableWhereClause(unittest.TestCase):

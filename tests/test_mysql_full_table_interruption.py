@@ -13,7 +13,7 @@ class MySQLFullTableInterruption(unittest.TestCase):
 
 
     def tap_name(self):
-        return "tap-mysql"
+        return "tap-mysql-custom"
 
 
     def get_type(self):
@@ -102,7 +102,7 @@ class MySQLFullTableInterruption(unittest.TestCase):
         }
 
     def get_interrupted_state(self):
-        # NB: It seems that tap-mysql treats `initial_full_table_complete`
+        # NB: It seems that tap-mysql-custom treats `initial_full_table_complete`
         # to mean "initial full table started" and uses it to emit or not
         # emit an activate version message
         return {

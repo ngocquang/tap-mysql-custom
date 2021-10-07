@@ -6,10 +6,10 @@ import datetime
 import singer
 from singer import metadata
 
-import tap_mysql.sync_strategies.binlog as binlog
-import tap_mysql.sync_strategies.common as common
+import tap_mysql_custom.sync_strategies.binlog as binlog
+import tap_mysql_custom.sync_strategies.common as common
 
-from tap_mysql.connection import connect_with_backoff, MySQLConnection
+from tap_mysql_custom.connection import connect_with_backoff, MySQLConnection
 
 LOGGER = singer.get_logger()
 
