@@ -508,7 +508,7 @@ def write_schema_message(catalog_entry, bookmark_properties=[]):
     ))
 
 
-def do_sync_incremental(mysql_conn, catalog_entry, state, columns, optional_limit=None):
+def do_sync_incremental(mysql_conn, catalog_entry, state, columns, optional_limit=None,query_add=None):
     LOGGER.info("Stream %s is using incremental replication", catalog_entry.stream)
 
     md_map = metadata.to_map(catalog_entry.metadata)
@@ -520,7 +520,10 @@ def do_sync_incremental(mysql_conn, catalog_entry, state, columns, optional_limi
     write_schema_message(catalog_entry=catalog_entry,
                          bookmark_properties=[replication_key])
 
-    if optional_limit:
+    if query_add:
+        LOGGER.info("Query added %s is %s", catalog_entry.stream, query_add)
+        incremental.sync_table(mysql_conn, catalog_entry, state, columns, int(optional_limit), query_add)
+    elif optional_limit:
         LOGGER.info("Incremental Stream %s is using an optional limit clause of %d", catalog_entry.stream, int(optional_limit))
         incremental.sync_table(mysql_conn, catalog_entry, state, columns, int(optional_limit))
     else:
@@ -651,7 +654,8 @@ def sync_non_binlog_streams(mysql_conn, non_binlog_catalog, config, state):
 
             if replication_method == 'INCREMENTAL':
                 optional_limit = config.get('incremental_limit')
-                do_sync_incremental(mysql_conn, catalog_entry, state, columns, optional_limit)
+                query_add = config.get('query_add')
+                do_sync_incremental(mysql_conn, catalog_entry, state, columns, optional_limit, query_add)
             elif replication_method == 'LOG_BASED':
                 do_sync_historical_binlog(mysql_conn, config, catalog_entry, state, columns)
             elif replication_method == 'FULL_TABLE':
