@@ -75,10 +75,10 @@ def sync_table(mysql_conn, catalog_entry, state, columns, limit=None):
 
                     params['replication_key_value'] = replication_key_value
                 elif replication_key_metadata is not None:
-                    select_sql += ' WHERE %(query_add_metadata)s ORDER BY `{}` ASC'.format(replication_key_metadata)
+                    select_sql += ' WHERE {} ORDER BY `{}` ASC'.format(query_add_metadata,replication_key_metadata)
 
                 if limit:
-                    select_sql += ' WHERE %(query_add_metadata)s LIMIT {}'.format(limit)
+                    select_sql += ' WHERE {} LIMIT {}'.format(query_add_metadata,limit)
 
                 num_rows = common.sync_query(cur,
                                              catalog_entry,
