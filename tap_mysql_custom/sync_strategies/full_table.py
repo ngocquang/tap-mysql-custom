@@ -219,6 +219,13 @@ def update_incremental_full_table_state(catalog_entry, state, cursor):
 def sync_table(mysql_conn, catalog_entry, state, columns, stream_version):
     common.whitelist_bookmark_keys(generate_bookmark_keys(catalog_entry), catalog_entry.tap_stream_id, state)
 
+    # Quang
+    catalog_metadata = metadata.to_map(catalog_entry.metadata)
+    stream_metadata = catalog_metadata.get((), {})
+    query_add_metadata = stream_metadata.get('query-add')
+    if query_add_metadata is None:
+        query_add_metadata = "1=1"
+
     bookmark = state.get('bookmarks', {}).get(catalog_entry.tap_stream_id, {})
     version_exists = True if 'version' in bookmark else False
 
@@ -247,6 +254,8 @@ def sync_table(mysql_conn, catalog_entry, state, columns, stream_version):
     with connect_with_backoff(mysql_conn) as open_conn:
         with open_conn.cursor() as cur:
             select_sql = common.generate_select_sql(catalog_entry, columns)
+            # Quang
+            select_sql += ' WHERE {}'.format(query_add_metadata)
 
             if perform_resumable_sync:
                 LOGGER.info("Full table sync is resumable based on primary key definition, will replicate incrementally")

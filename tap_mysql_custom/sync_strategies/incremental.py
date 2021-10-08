@@ -22,7 +22,13 @@ def sync_table(mysql_conn, catalog_entry, state, columns, limit=None):
     while iterate_limit:
 
         replication_key_metadata = stream_metadata.get('replication-key')
+        # Quang
         query_add_metadata = stream_metadata.get('query-add')
+        if query_add_metadata is None:
+            query_add_metadata = '1=1'
+
+        # LOGGER.info("query_add %s",query_add_metadata)
+
         replication_key_state = singer.get_bookmark(state,
                                                     catalog_entry.tap_stream_id,
                                                     'replication_key')
@@ -62,16 +68,17 @@ def sync_table(mysql_conn, catalog_entry, state, columns, limit=None):
                     if catalog_entry.schema.properties[replication_key_metadata].format == 'date-time':
                         replication_key_value = pendulum.parse(replication_key_value)
 
-                    select_sql += ' WHERE `{}` >= %(replication_key_value)s %(query_add_metadata)s ORDER BY `{}` ASC'.format(
-                        replication_key_metadata,
-                        replication_key_metadata)
+                    # LOGGER.info("query_add_metadata %s",query_add_metadata)
+                    # Quang
+                    select_sql += ' WHERE `{}` >= %(replication_key_value)s AND {} ORDER BY `{}` ASC'.format(
+                        replication_key_metadata,query_add_metadata,replication_key_metadata)
 
                     params['replication_key_value'] = replication_key_value
                 elif replication_key_metadata is not None:
-                    select_sql += ' ORDER BY `{}` ASC'.format(replication_key_metadata)
+                    select_sql += ' WHERE %(query_add_metadata)s ORDER BY `{}` ASC'.format(replication_key_metadata)
 
                 if limit:
-                    select_sql += ' LIMIT {}'.format(limit)
+                    select_sql += ' WHERE %(query_add_metadata)s LIMIT {}'.format(limit)
 
                 num_rows = common.sync_query(cur,
                                              catalog_entry,
